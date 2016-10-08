@@ -1,5 +1,5 @@
 ---
-# tasks file for opdk-extension-ds
+# tasks file for apigee-opdk-extension-ds
 
 - name: Rebuild Cassandra nodes
   shell: '{{ nodetool }} -h {{ local_address }} rebuild {{ opdk_region }}'
