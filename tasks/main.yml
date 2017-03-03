@@ -1,5 +1,9 @@
 ---
 # tasks file for apigee-opdk-extension-ds
+- name: Nodetool flush
+  shell: '{{ nodetool }} flush'
+  environment:
+    JAVA_HOME: '{{ java_home }}'
 
 - name: Rebuild Cassandra nodes
   shell: '{{ nodetool }} -h {{ local_address }} rebuild {{ opdk_region }}'
