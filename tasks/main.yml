@@ -1,6 +1,6 @@
 ---
 # tasks file for apigee-opdk-extension-ds
-- name: Nodetool flush
+- name: Nodetool flush before repair
   shell: '{{ nodetool }} flush'
   environment:
     JAVA_HOME: '{{ java_home }}'
@@ -9,3 +9,9 @@
   shell: '{{ nodetool }} -h {{ local_address }} rebuild {{ opdk_region }}'
   environment:
     JAVA_HOME: '{{ java_home }}'
+
+- name: Nodetool flush after repair
+  shell: '{{ nodetool }} flush'
+  environment:
+    JAVA_HOME: '{{ java_home }}'
+
