@@ -6,7 +6,7 @@
     JAVA_HOME: '{{ java_home }}'
 
 - name: Rebuild Cassandra nodes
-  shell: '{{ nodetool }} -h {{ local_address }} rebuild {{ opdk_region }}'
+  shell: '{{ nodetool }} -h {{ private_address }} rebuild {{ opdk_region }}'
   environment:
     JAVA_HOME: '{{ java_home }}'
 
