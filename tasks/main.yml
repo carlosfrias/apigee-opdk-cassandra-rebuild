@@ -10,17 +10,23 @@
 
 - name: Nodetool flush before repair
   shell: '{{ nodetool }} flush'
+  args:
+    removes: "{{ nodetool }}"
   environment:
     JAVA_HOME: '{{ java_home }}'
 
 - name: Rebuild Cassandra nodes
   shell: '{{ nodetool }} -h {{ private_address }} rebuild {{ item }}'
+  args:
+    removes: "{{ nodetool }}"
   environment:
     JAVA_HOME: '{{ java_home }}'
   with_items: "{{ region_list }}"
 
 - name: Nodetool flush after rebuild
   shell: '{{ nodetool }} cleanup'
+  args:
+    removes: "{{ nodetool }}"
   environment:
     JAVA_HOME: '{{ java_home }}'
 
