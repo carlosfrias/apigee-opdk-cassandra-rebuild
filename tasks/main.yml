@@ -1,14 +1,23 @@
 ---
 # tasks file for apigee-opdk-extension-ds
+- name: Assert that required attributes are available
+  assert:
+    that:
+    - nodetool is defined
+    - java_home is defined
+    - private_address is defined
+    - region_list is defined
+
 - name: Nodetool flush before repair
   shell: '{{ nodetool }} flush'
   environment:
     JAVA_HOME: '{{ java_home }}'
 
 - name: Rebuild Cassandra nodes
-  shell: '{{ nodetool }} -h {{ private_address }} rebuild {{ opdk_region }}'
+  shell: '{{ nodetool }} -h {{ private_address }} rebuild {{ item }}'
   environment:
     JAVA_HOME: '{{ java_home }}'
+  with_items: "{{ region_list }}"
 
 - name: Nodetool flush after rebuild
   shell: '{{ nodetool }} cleanup'
