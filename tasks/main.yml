@@ -6,7 +6,8 @@
     - nodetool is defined
     - java_home is defined
     - private_address is defined
-    - region_list is defined
+    - region is defined
+    msg: "Please provide the missing attribute."
 
 - name: Nodetool flush before repair
   shell: '{{ nodetool }} flush'
@@ -16,12 +17,11 @@
     JAVA_HOME: '{{ java_home }}'
 
 - name: Rebuild Cassandra nodes
-  shell: '{{ nodetool }} -h {{ private_address }} rebuild {{ item }}'
+  shell: '{{ nodetool }} -h {{ private_address }} rebuild {{ region }}'
   args:
     removes: "{{ nodetool }}"
   environment:
     JAVA_HOME: '{{ java_home }}'
-  with_items: "{{ region_list }}"
 
 - name: Nodetool flush after rebuild
   shell: '{{ nodetool }} cleanup'
