@@ -10,8 +10,8 @@
   environment:
     JAVA_HOME: '{{ java_home }}'
 
-- name: Nodetool flush after repair
-  shell: '{{ nodetool }} flush'
+- name: Nodetool flush after rebuild
+  shell: '{{ nodetool }} cleanup'
   environment:
     JAVA_HOME: '{{ java_home }}'
 
