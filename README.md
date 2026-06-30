@@ -1,49 +1,72 @@
-Role Name
-=========
+# apigee-opdk-cassandra-rebuild — Multi-Datacenter Cassandra Ring Rebuild
 
-A brief description of the role goes here.
+> An Ansible role that re-streams data into a Cassandra node or datacenter by running `nodetool rebuild` against a **named source datacenter** — the canonical operation for adding a region, recovering a node, or restoring replication after a topology change in an Apigee Edge Private Cloud (OPDK) planet.
 
-Requirements
-------------
+This is **not "an Ansible role"** — it is a Cassandra cluster-administration operation expressed as code. Ansible is the execution medium; the durable work is knowing **why the `flush → rebuild → cleanup` sequence matters**, **why `rebuild <source-dc>` is used instead of `repair`**, and **what token-range ownership semantics make the final `cleanup` necessary**.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
-
-Role Variables
---------------
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
-
-Example Playbook
-----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-Apache
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
 <!-- BEGIN Google Required Disclaimer -->
 
-# Not Google Product Clause
+## Not Google Product Clause
 
 This is not an officially supported Google product.
 <!-- END Google Required Disclaimer -->
-<!-- BEGIN Google How To Contribute -->
-# How to Contribute
 
-We'd love to accept your patches and contributions to this project. Please review our [guidelines](CONTRIBUTING.md).
-<!-- END Google How To Contribute -->
+---
+
+## What the role actually does
+
+`tasks/main.yml` runs a precise three-step sequence against a Cassandra node:
+
+1. **`nodetool flush`** — flush Memtables to SSTables before streaming, so rebuild operates on durable data.
+2. **`nodetool -h <private_address> rebuild dc-<region_num>`** — re-stream data into the local node from a **named source datacenter** (`dc-<N>`). This is the multi-DC rebuild invocation: the target node pulls only the token ranges it owns from a healthy source DC, rather than a full-cluster repair.
+3. **`nodetool cleanup`** — after rebuild, drop SSTables for token ranges the node no longer owns (post-topology-change superseded data).
+
+Every command is host-scoped (`-h {{ private_address }}`), runs with the correct `JAVA_HOME`, and is guarded by `removes: "{{ nodetool }}"` as a precondition.
+
+---
+
+## The underlying expertise demonstrated
+
+> Ansible is the medium. The skills below are what the code actually applies.
+
+| Domain | What's encoded in the code |
+|--------|----------------------------|
+| **`nodetool` operations fluency** | Correct `flush` → `rebuild` → `cleanup` sequencing; host-scoped invocation; `JAVA_HOME` management. |
+| **Multi-DC ring topology** | `rebuild dc-<region_num>` streams from a *named source DC* — the right primitive for adding a region or recovering a DC, distinct from `repair` (anti-entropy) or `bootstrap`. |
+| **Token-range ownership semantics** | The trailing `cleanup` shows awareness that after a topology change a node may hold SSTables for ranges it no longer owns. |
+| **Precondition discipline** | `assert` that `nodetool`, `java_home`, `private_address`, `region` are defined; `removes:` guard. |
+
+---
+
+## When this role is used
+
+This role is composed into the broader OPDK runbooks for:
+- **Adding a datacenter** to an existing planet (the new DC streams from an established one).
+- **Dead-node recovery** after `replace_address` bootstrap.
+- **Replication-factor / topology changes** that require data re-streaming.
+
+The source DC must be healthy and fully replicated before the target streams from it. See the [`apigee-edge-opdk`](https://github.com/carlosfrias/apigee-edge-opdk) framework and the `apigee-opdk-*` role corpus for the composition playbooks.
+
+---
+
+## Role variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `nodetool` | yes | Path to the `nodetool` executable |
+| `java_home` | yes | `JAVA_HOME` for Cassandra/JMX commands |
+| `private_address` | yes | The target node's private IP (host-scoped operation) |
+| `region` | yes | The local region identifier (used to resolve the source DC) |
+| `region_num` | — | The numeric source DC suffix (`rebuild dc-{{ region_num }}`) |
+
+---
+
+## Provenance
+
+Authored and maintained by **Carlos Frias** during his tenure on Apigee Edge Private Cloud. One of the Cassandra-administration roles in the `apigee-opdk-*` corpus — the same expertise is aggregated in the [`apigee-edge-opdk`](https://github.com/carlosfrias/apigee-edge-opdk) framework.
+
+Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## License
+
+See [LICENSE](./LICENSE).
