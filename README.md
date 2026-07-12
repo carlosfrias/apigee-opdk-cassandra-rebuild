@@ -1,5 +1,8 @@
 # apigee-opdk-cassandra-rebuild — Multi-Datacenter Cassandra Ring Rebuild
 
+> 🔄 **Evolution note:** The automation approach from this OPDK-era role has been consolidated into the `apigee-hybrid-workspace` Ansible collection. See the successor capability in the portfolio hub: [`carlosfrias/apigee-hybrid-workspace`](https://github.com/carlosfrias/apigee-hybrid-workspace) → `bap_coe/private_cloud/` and `bap_coe/apigee_hybrid/`. The collection README explains each role group’s business value and production context.
+
+
 > **An Ansible role that re-streams data into a Cassandra node or datacenter by running `nodetool rebuild` against a named source datacenter** — the canonical operation for adding a region, recovering a node, or restoring replication after a topology change in an Apigee Edge Private Cloud (OPDK) planet.
 
 > [!NOTE]
